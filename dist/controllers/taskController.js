@@ -1,0 +1,91 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getById = exports.deleteTask = exports.updateTask = exports.getTasks = exports.addTask = void 0;
+const taskModel_1 = require("../models/taskModel");
+const __1 = require("..");
+const addTask = (req, res) => {
+    const { name, status } = req.body;
+    if (!name) {
+        return res.status(400).json("name is required");
+    }
+    taskModel_1.TaskModel.create({ name, status }, (err, result) => {
+        if (err)
+            return res.status(500).json({ error: err.message });
+        __1.io.emit('task_updated', { action: 'create', msg: `new task(${result.insertId}) added successfully ` });
+        return res.status(201).json({ id: result.insertId, name, status: status || 'Pending' });
+    });
+};
+exports.addTask = addTask;
+const getTasks = (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const q = req.query.search;
+    const status = req.query.status;
+    taskModel_1.TaskModel.findAll(page, pageSize, (err, totalCount, results) => {
+        if (err)
+            return res.status(500).json({ error: err.message });
+        const totalPages = Math.ceil(totalCount / pageSize);
+        res.status(200).json({
+            tasks: results,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalCount,
+                pageSize,
+            },
+        });
+    }, status, q);
+};
+exports.getTasks = getTasks;
+const updateTask = (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(400).json("Valid task id is required");
+    }
+    const { status, name } = req.body;
+    if ((!status && !name)) {
+        return res.status(400).json("status or name is required");
+    }
+    taskModel_1.TaskModel.update(Number(id), { status: status, name: name }, (err, result) => {
+        if (err)
+            return res.status(500).json({ error: err.message });
+        if (result.affectedRows === 0)
+            return res.status(404).json({ error: 'Task not found' });
+        __1.io.emit('task_updated', { action: 'update', msg: `task id ${id} is updated` });
+        res.status(200).json({ id, status, name });
+    });
+};
+exports.updateTask = updateTask;
+const deleteTask = (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(400).json("Valid task id is required");
+    }
+    taskModel_1.TaskModel.delete(Number(id), (err, result) => {
+        if (err)
+            return res.status(500).json({ error: err.message });
+        if (result.affectedRows === 0)
+            return res.status(404).json({ error: 'Task not found' });
+        __1.io.emit('task_updated', { action: 'delete', msg: `Task id ${id} deleted successfully` });
+        return res.status(200).json({ message: 'Task deleted successfully', id });
+    });
+};
+exports.deleteTask = deleteTask;
+const getById = (req, res) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(400).json("Valid task id is required");
+    }
+    taskModel_1.TaskModel.findById(Number(id), (err, task) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        else if (!task) {
+            return res.status(404).json({ error: "task not found" });
+        }
+        else {
+            return res.status(200).send(task);
+        }
+    });
+};
+exports.getById = getById;
