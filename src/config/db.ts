@@ -1,22 +1,27 @@
+// src/db.ts
 import { createConnection } from 'mysql2';
-import { createTaskTable } from '../Database/TaskTable';
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
 export const db = createConnection({
-    host: process.env.HOST ,
-    user: process.env.DB_USER ,
-    password: process.env.DB_PASSWORD ,
-    database: process.env.DATABASE ,
-    port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306, 
+  host: process.env.HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DATABASE,
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
 });
 
-
-createTaskTable()
-db.connect((err) => {
-    if (err) {
+export const connectToDatabase = () => {
+  return new Promise<void>((resolve, reject) => {
+    db.connect((err) => {
+      if (err) {
         console.error('Error connecting to the database:', err.message);
-        process.exit(1);
-    }
-});
+        reject(err);
+      } else {
+        console.log('Connected to the database.');
+        resolve();
+      }
+    });
+  });
+};

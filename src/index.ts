@@ -4,6 +4,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import taskRoutes from './routes/taskRoutes';
 import dotenv from "dotenv";
+import { connectToDatabase } from "./config/db";
 
 dotenv.config();
 const app: Express = express();
@@ -18,6 +19,7 @@ export const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 const port = process.env.PORT||5000;
+connectToDatabase()
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
