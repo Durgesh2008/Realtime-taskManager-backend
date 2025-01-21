@@ -20,7 +20,10 @@ export const io = new Server(server, {
 app.use(cors(corsOptions));
 app.use(express.json());
 const port = process.env.PORT||5000;
-connectToDatabase()
+connectToDatabase().catch((err) => {
+  console.error('Failed to connect to the database:', err);
+  process.exit(1); 
+});
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

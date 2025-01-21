@@ -24,14 +24,16 @@ exports.io = new socket_io_1.Server(server, {
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 const port = process.env.PORT || 5000;
-(0, db_1.connectToDatabase)();
+(0, db_1.connectToDatabase)().catch((err) => {
+    process.exit(1);
+});
 exports.io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+    
     socket.on('disconnect', () => {
-        console.log('A user disconnected:', socket.id);
+        
     });
 });
 app.use('/tasks', taskRoutes_1.default);
 server.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    
 });
